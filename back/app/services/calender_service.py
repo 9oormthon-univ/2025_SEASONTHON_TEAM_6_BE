@@ -16,7 +16,6 @@ async def create_google_calendar_event(
 
     event_data = {
         "summary": summary,
-        "description": description,
         "start": {"dateTime": start_time, "timeZone": "Asia/Seoul"},
         "end": {"dateTime": end_time, "timeZone": "Asia/Seoul"},
     }
