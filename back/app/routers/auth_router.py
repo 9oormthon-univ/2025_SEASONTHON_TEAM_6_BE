@@ -8,6 +8,7 @@ from app.services.auth_service import (
     decode_id_token,
 )
 import logging
+import json
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -84,6 +85,7 @@ async def handle_google_oauth_callback(request: Request):
             "access_token": access_token,
             "email": user_info.get("email"),
             "name": user_info.get("name"),
+            "calendars": json.dumps(calendar_list),
         }
     )
 
