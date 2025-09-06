@@ -7,7 +7,7 @@ GOOGLE_CALENDAR_CREATE_API = (
 
 
 async def create_google_calendar_event(
-    access_token: str, summary: str, description: str, start_time: str, end_time: str
+    access_token: str, summary: str, start_time: str, end_time: str
 ):
     headers = {
         "Authorization": f"Bearer {access_token}",
