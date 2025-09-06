@@ -1,0 +1,79 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: seasonthon-mysql
+    environment:
+      MYSQL_DATABASE: SEASONTHON_DB
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_ROOT_HOST: "%"
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql_conf/utf8.cnf:/etc/mysql/conf.d/utf8.cnf:ro # 로컬의 설정 -> 도커 설정
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+    networks:
+      - seasonthon-network
+
+#  libretranslate:
+#    image: libretranslate/libretranslate:latest
+#    container_name: libretranslate
+#    restart: unless-stopped
+#    environment:
+#      LT_LOAD_ONLY: ko,en,ja,zh   # 필요한 언어만 로드 (메모리/속도 최적화)
+#      LT_CPU_THREADS: 2           # 서버 자원에 맞게 조정
+#    ports:
+#      - "5010:5000"               # 로컬 확인용: http://localhost:5010/translate
+#    volumes:
+#      - lt_models:/root/.local/share/argos-translate
+#    networks:
+#      - seasonthon-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: seasonthon-app:latest
+    container_name: seasonthon-app
+    depends_on:
+      db:
+        condition: service_healthy
+#      libretranslate:
+#        condition: service_started      # 번역 서버 기동 후 앱 시작
+    ports:
+      - "8080:8080"
+
+    env_file:
+      - .env              # OPENAI_KEY 등 .env의 모든 키가 컨테이너로 주입됨
+
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/SEASONTHON_DB?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_HIKARI_INITIALIZATIONFAILTIMEOUT: "-1"
+
+
+
+    restart: unless-stopped
+    networks:
+      - seasonthon-network
+
+volumes:
+  mysql_data:
+  lt_models:
+
+networks:
+  seasonthon-network:
+    driver: bridge
+
+
+
+
+

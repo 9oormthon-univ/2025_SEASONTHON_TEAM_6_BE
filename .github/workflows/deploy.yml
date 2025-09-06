@@ -1,0 +1,83 @@
+name: Deploy seasonthon-backend-project
+
+on:
+  push:
+    branches:
+      - main
+#      - feat/nearby-hospital
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest # GitHub가 띄우는 가상머신
+
+    steps:
+      # ✅ 1. 내 코드 내려받기
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # ✅ 2. Java 17 설치하기
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # ✅ 3. gradlew 실행 가능하게 만들기 (프로젝트 루트의 gradlew 파일에 실행 권한을 줘서, 이후에 ./gradlew build 같은 명령어가 작동할 수 있게 만든다)
+      - name: Grant execute permission for Gradle
+        run: chmod +x ./gradlew
+
+      # ✅ 4. 스프링 프로젝트 빌드하기 (-x test는 “테스트는 생략하고 빌드”)
+      - name: Build Spring Boot JAR
+        run: ./gradlew clean build -x test
+
+      # ✅ .env 파일을 먼저 생성한다
+      - name: Create .env file from single GitHub Secret
+        run: |
+          echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+      
+
+      # ✅ 그 다음 .env 포함해서 전체를 EC2로 전송
+      - name: Copy project to EC2 (including .env)
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "."
+          target: "/home/${{ secrets.EC2_USER }}/SEASONTHON"
+
+
+      # ✅ 5. GitHub Actions의 비밀 키(secrets) 에 등록해놓은 EC2_HOST, EC2_USER, EC2_KEY가 제대로 넘어왔는지 확인
+      - name: Debug EC2 variables
+        run: |
+          echo "EC2_HOST: ${EC2_HOST:0:5}*****"
+          echo "EC2_USER: ${EC2_USER}"
+          echo "EC2_KEY length: $(echo "$EC2_KEY" | wc -c)"
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_KEY: ${{ secrets.EC2_KEY }}
+
+
+      # ✅ 6. EC2 서버로 코드 복사
+      - name: Copy project to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "."
+          target: "/home/${{ secrets.EC2_USER }}/SEASONTHON"
+          debug: true
+
+      #  ✅ 7. EC2에서 docker compose 실행
+      - name: SSH into EC2 and run Docker Compose
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd SEASONTHON
+            docker compose down || true
+            docker compose up -d --build
