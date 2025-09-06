@@ -6,7 +6,7 @@ from app.services.calender_service import create_google_calendar_event
 router = APIRouter(prefix="/calendar", tags=["calendar"])
 
 
-@router.post("/add-event")
+@router.post("/add_event")
 async def add_event(
     access_token: str = Body(...),
     summary: str = Body(...),
