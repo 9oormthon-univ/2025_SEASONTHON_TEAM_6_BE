@@ -78,4 +78,4 @@ async def handle_google_oauth_callback(request: Request):
         return {"error": "Failed to fetch user calendars", "details": str(e)}
 
     logging.info("--- Google OAuth Callback End ---")
-    return {"access_token": access_token}
+    return {"access_token": access_token, "user": user_info, "calendars": calendar_list}
