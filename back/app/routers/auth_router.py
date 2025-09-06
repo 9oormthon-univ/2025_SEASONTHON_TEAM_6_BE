@@ -25,10 +25,12 @@ def google_login():
 @router.get("/google")
 async def handle_google_oauth_callback(request: Request):
     logging.info("--- Google OAuth Callback Start ---")
-    
+
     # 1. 인가 코드 받기
     code = request.query_params.get("code")
-    logging.info(f"Step 1: Received authorization code: {code[:20] if code else 'None'}...")
+    logging.info(
+        f"Step 1: Received authorization code: {code[:20] if code else 'None'}..."
+    )
     if not code:
         logging.error("Error: No authorization code provided.")
         return {"error": "No authorization code provided"}
@@ -43,9 +45,11 @@ async def handle_google_oauth_callback(request: Request):
         id_token = token_data.get("id_token")
 
         if not access_token or not id_token:
-            logging.error("Error: Failed to retrieve access_token or id_token from token_data.")
+            logging.error(
+                "Error: Failed to retrieve access_token or id_token from token_data."
+            )
             return {"error": "Failed to retrieve tokens"}
-        
+
         logging.info(f"Step 2: Extracted access_token: {access_token[:20]}...")
         logging.info(f"Step 2: Extracted id_token: {id_token[:20]}...")
 
@@ -74,4 +78,4 @@ async def handle_google_oauth_callback(request: Request):
         return {"error": "Failed to fetch user calendars", "details": str(e)}
 
     logging.info("--- Google OAuth Callback End ---")
-    return {"user": user_info, "calendars": calendar_list}
+    return {"access_token": access_token}
