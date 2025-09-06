@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
+from urllib.parse import urlencode
 from app.services.auth_service import (
     generate_google_oauth_url,
     exchange_code_for_token,
@@ -78,4 +79,14 @@ async def handle_google_oauth_callback(request: Request):
         return {"error": "Failed to fetch user calendars", "details": str(e)}
 
     logging.info("--- Google OAuth Callback End ---")
-    return {"access_token": access_token, "user": user_info, "calendars": calendar_list}
+    query_params = urlencode(
+        {
+            "access_token": access_token,
+            "email": user_info.get("email"),
+            "name": user_info.get("name"),
+        }
+    )
+
+    redirect_url = f"https://2025-seasonthon-team-6-fe.vercel.app/?{query_params}"
+
+    return RedirectResponse(url=redirect_url)
