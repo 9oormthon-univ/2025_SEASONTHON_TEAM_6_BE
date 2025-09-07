@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from app.routers import dpm_router
 from app.routers import auth_router
-from app.routers import calender_router
+from app.routers import calendar_router
 
 
 load_dotenv()
@@ -28,4 +28,4 @@ app.add_middleware(
 # 라우터 등록
 app.include_router(dpm_router.router)
 app.include_router(auth_router.router)
-app.include_router(calender_router.router)
+app.include_router(calendar_router.router)
