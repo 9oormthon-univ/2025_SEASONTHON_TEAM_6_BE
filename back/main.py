@@ -5,6 +5,7 @@ from app.routers import dpm_router
 from app.routers import auth_router
 from app.routers import calender_router
 
+
 load_dotenv()
 
 app = FastAPI(title="구름톤 FastAPI 백엔드")
