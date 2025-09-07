@@ -44,6 +44,7 @@ async def handle_google_oauth_callback(request: Request):
         logging.info(f"Step 2: Received token data: {token_data}")
 
         access_token = token_data.get("access_token")
+        print
         id_token = token_data.get("id_token")
 
         if not access_token or not id_token:
